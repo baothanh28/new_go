@@ -1,0 +1,31 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+master_database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "master_db"
+  user: "postgres"
+  password: "password"
+  max_open_conns: 25
+  max_idle_conns: 5
+
+tenant_database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "tenant_db"
+  user: "postgres"
+  password: "password"
+  max_open_conns: 25
+  max_idle_conns: 5
+
+jwt:
+  secret: "your-secret-key-change-in-production-must-be-at-least-32-characters"
+  expiration_hours: 24
+
+logger:
+  level: "info"
+  format: "json"
