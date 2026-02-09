@@ -8,8 +8,8 @@ import (
 	"myapp/internal/pkg/server"
 	"myapp/internal/service/auth"
 	"myapp/internal/service/health"
-	"myapp/internal/service/product"
 	productmodule "myapp/internal/service/product/module"
+	productrouter "myapp/internal/service/product/router"
 )
 
 // AppModule combines all application modules and services
@@ -29,5 +29,5 @@ var AppModule = fx.Options(
 	// Route registration for all services
 	fx.Invoke(auth.RegisterAuthRoutes),
 	fx.Invoke(health.RegisterHealthRoutes),
-	fx.Invoke(product.RegisterProductRoutes),
+	fx.Invoke(productrouter.RegisterProductRoutes),
 )
