@@ -12,6 +12,8 @@ import (
 	"myapp/internal/module"
 	"myapp/internal/pkg/database"
 	"myapp/internal/service/auth"
+	authmigration "myapp/internal/service/auth"
+	productmigration "myapp/internal/service/product/migration"
 )
 
 var (
@@ -90,21 +92,29 @@ func runServe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// runMigrate runs database migrations
+// runMigrate runs database migrations for all services
 func runMigrate(cmd *cobra.Command, args []string) error {
-	fmt.Println("Running database migrations...")
+	fmt.Println("Running database migrations for all services...")
 	
 	app := fx.New(
 		module.AppModule,
 		fx.NopLogger,
 		fx.Invoke(func(dbManager *database.DatabaseManager, logger *zap.Logger) error {
 			// Run auth service migrations on master database
-			if err := auth.RunMigrations(dbManager.MasterDB, logger); err != nil {
+			logger.Info("Running auth service migrations...")
+			if err := authmigration.RunMigrations(dbManager.MasterDB, logger); err != nil {
 				return fmt.Errorf("run auth migrations: %w", err)
 			}
+			logger.Info("Auth migrations completed")
 			
-			// Run migrations on tenant database if needed
-			// You can add more migrations here for other services
+			// Run product service migrations on tenant database
+			logger.Info("Running product service migrations...")
+			if err := productmigration.RunMigrations(dbManager.TenantDB); err != nil {
+				return fmt.Errorf("run product migrations: %w", err)
+			}
+			logger.Info("Product migrations completed")
+			
+			// Add more service migrations here as needed
 			
 			logger.Info("All migrations completed successfully")
 			return nil
