@@ -1,0 +1,1 @@
+Please create model Category(id ,name, type, code) into folder @src/internal/service/product/model then using skill @.cursor/skills/golang-business/SKILL.md  complete 
