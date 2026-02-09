@@ -1,10 +1,10 @@
 package module
 
 import (
-	"github.com/base/src/internal/service/product/handler"
-	"github.com/base/src/internal/service/product/repository"
-	"github.com/base/src/internal/service/product/service"
 	"go.uber.org/fx"
+	"myapp/internal/service/product/handler"
+	"myapp/internal/service/product/repository"
+	"myapp/internal/service/product/service"
 )
 
 // Module exports product service dependencies

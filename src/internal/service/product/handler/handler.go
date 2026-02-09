@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/base/src/internal/service/product/model"
-	"github.com/base/src/internal/service/product/service"
 	"github.com/labstack/echo/v4"
+	"myapp/internal/service/product/model"
+	"myapp/internal/service/product/service"
 )
 
 // Handler handles product HTTP requests

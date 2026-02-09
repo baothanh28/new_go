@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/base/src/internal/pkg/database"
-	"github.com/base/src/internal/service/product/model"
 	"gorm.io/gorm"
+	"myapp/internal/pkg/database"
+	"myapp/internal/service/product/model"
 )
 
 // Repository handles product data access

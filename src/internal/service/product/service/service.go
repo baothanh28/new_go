@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/base/src/internal/service/product/model"
-	"github.com/base/src/internal/service/product/repository"
 	"gorm.io/gorm"
+	"myapp/internal/service/product/model"
+	"myapp/internal/service/product/repository"
 )
 
 var (

@@ -3,8 +3,8 @@ package migration
 import (
 	"fmt"
 
-	"github.com/base/src/internal/service/product/model"
 	"gorm.io/gorm"
+	"myapp/internal/service/product/model"
 )
 
 // RunMigrations runs database migrations for product service

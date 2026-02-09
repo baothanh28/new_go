@@ -7,6 +7,7 @@ import (
 	"myapp/internal/pkg/logger"
 	"myapp/internal/pkg/server"
 	productmodule "myapp/internal/service/product/module"
+	productrouter "myapp/internal/service/product/router"
 )
 
 // AppModule combines infrastructure and product service modules
@@ -21,5 +22,5 @@ var AppModule = fx.Options(
 	productmodule.Module,
 	
 	// Router registration
-	fx.Invoke(RegisterProductRoutes),
+	fx.Invoke(productrouter.RegisterProductRoutes),
 )

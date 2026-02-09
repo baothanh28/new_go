@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"myapp/internal/module"
 	"myapp/internal/pkg/database"
-	"myapp/internal/service/auth"
 	authmigration "myapp/internal/service/auth"
 	productmigration "myapp/internal/service/product/migration"
 )
