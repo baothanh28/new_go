@@ -13,6 +13,10 @@ func RunMigrations(db *gorm.DB) error {
 		return fmt.Errorf("failed to migrate product table: %w", err)
 	}
 
+	if err := db.AutoMigrate(&model.ProductTestOnly{}); err != nil {
+		return fmt.Errorf("failed to migrate product_test_only table: %w", err)
+	}
+
 	// Add any additional migrations here
 	if err := createIndexes(db); err != nil {
 		return fmt.Errorf("failed to create indexes: %w", err)
@@ -23,6 +27,7 @@ func RunMigrations(db *gorm.DB) error {
 
 // createIndexes creates additional database indexes
 func createIndexes(db *gorm.DB) error {
+	// Product indexes
 	// Index on category for faster category queries
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)").Error; err != nil {
 		return err
@@ -43,6 +48,22 @@ func createIndexes(db *gorm.DB) error {
 	// if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_products_search ON products USING gin(to_tsvector('english', name || ' ' || description))").Error; err != nil {
 	// 	return err
 	// }
+
+	// ProductTestOnly indexes
+	// Index on type for filtering by type
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_product_test_only_type ON product_test_only(type)").Error; err != nil {
+		return err
+	}
+
+	// Unique index on code (if not already created by GORM)
+	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_product_test_only_code ON product_test_only(code)").Error; err != nil {
+		return err
+	}
+
+	// Index on name for search queries
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_product_test_only_name ON product_test_only(name)").Error; err != nil {
+		return err
+	}
 
 	return nil
 }

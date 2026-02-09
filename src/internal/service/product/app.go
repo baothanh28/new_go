@@ -23,4 +23,5 @@ var AppModule = fx.Options(
 	
 	// Router registration
 	fx.Invoke(productrouter.RegisterProductRoutes),
+	fx.Invoke(productrouter.RegisterProductTestOnlyRoutes),
 )
