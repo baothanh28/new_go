@@ -7,6 +7,14 @@ description: Generate complete business service layers (model, repository, servi
 
 Automatically generate complete service layers following clean architecture patterns with dependency injection (fx), proper error handling, and idiomatic Go code.
 
+## 🎯 Key Principle: One Entity = One File
+
+**IMPORTANT**: Each business entity must have its own separate file in repository/, service/, handler/, and router/ directories.
+
+**File Naming**: Use lowercase with underscores: `{entity}_repository.go`, `{entity}_service.go`, `{entity}_handler.go`, `{entity}_router.go`
+
+**Struct Naming**: Use entity name as prefix: `{Entity}Repository`, `{Entity}Service`, `{Entity}Handler`
+
 ## When to Use
 
 Trigger this skill when:
@@ -29,7 +37,9 @@ Read the model file to extract:
 
 ### Step 2: Generate Repository
 
-**Location**: `src/internal/service/{service}/repository/repository.go`
+**Location**: `src/internal/service/{service}/repository/{entity_lowercase}_repository.go`
+
+**File Naming**: Use lowercase entity name with underscore (e.g., `product_repository.go`, `category_repository.go`)
 
 **Template Pattern**:
 
@@ -43,15 +53,15 @@ import (
 	"myapp/internal/service/{service}/model"
 )
 
-// Repository handles {entity} data access
-type Repository struct {
+// {Entity}Repository handles {entity} data access
+type {Entity}Repository struct {
 	*database.BaseRepository[model.{Entity}]
 	db *gorm.DB
 }
 
-// NewRepository creates a new {entity} repository
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{
+// New{Entity}Repository creates a new {entity} repository
+func New{Entity}Repository(db *gorm.DB) *{Entity}Repository {
+	return &{Entity}Repository{
 		BaseRepository: database.NewBaseRepository[model.{Entity}](db),
 		db:             db,
 	}
@@ -73,7 +83,9 @@ func NewRepository(db *gorm.DB) *Repository {
 
 ### Step 3: Generate Service
 
-**Location**: `src/internal/service/{service}/service/service.go`
+**Location**: `src/internal/service/{service}/service/{entity_lowercase}_service.go`
+
+**File Naming**: Use lowercase entity name with underscore (e.g., `product_service.go`, `category_service.go`)
 
 **Template Pattern**:
 
@@ -95,18 +107,18 @@ var (
 	// Example: ErrSKUExists, ErrEmailExists, ErrInsufficientStock
 )
 
-// Service handles {entity} business logic
-type Service struct {
-	repo *repository.Repository
+// {Entity}Service handles {entity} business logic
+type {Entity}Service struct {
+	repo *repository.{Entity}Repository
 }
 
-// NewService creates a new {entity} service
-func NewService(repo *repository.Repository) *Service {
-	return &Service{repo: repo}
+// New{Entity}Service creates a new {entity} service
+func New{Entity}Service(repo *repository.{Entity}Repository) *{Entity}Service {
+	return &{Entity}Service{repo: repo}
 }
 
 // Create{Entity} creates a new {entity}
-func (s *Service) Create{Entity}(ctx context.Context, req *model.Create{Entity}Request) (*model.{Entity}, error) {
+func (s *{Entity}Service) Create{Entity}(ctx context.Context, req *model.Create{Entity}Request) (*model.{Entity}, error) {
 	// Add business validations here
 	// Check unique constraints
 	// Transform request to entity
@@ -115,7 +127,7 @@ func (s *Service) Create{Entity}(ctx context.Context, req *model.Create{Entity}R
 }
 
 // Get{Entity}ByID retrieves {entity} by ID
-func (s *Service) Get{Entity}ByID(ctx context.Context, id uint) (*model.{Entity}, error) {
+func (s *{Entity}Service) Get{Entity}ByID(ctx context.Context, id uint) (*model.{Entity}, error) {
 	entity, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -141,7 +153,9 @@ func (s *Service) Get{Entity}ByID(ctx context.Context, id uint) (*model.{Entity}
 
 ### Step 4: Generate Handler
 
-**Location**: `src/internal/service/{service}/handler/handler.go`
+**Location**: `src/internal/service/{service}/handler/{entity_lowercase}_handler.go`
+
+**File Naming**: Use lowercase entity name with underscore (e.g., `product_handler.go`, `category_handler.go`)
 
 **Template Pattern**:
 
@@ -157,19 +171,19 @@ import (
 	"myapp/internal/service/{service}/service"
 )
 
-// Handler handles {entity} HTTP requests
-type Handler struct {
-	service *service.Service
+// {Entity}Handler handles {entity} HTTP requests
+type {Entity}Handler struct {
+	service *service.{Entity}Service
 }
 
-// NewHandler creates a new {entity} handler
-func NewHandler(service *service.Service) *Handler {
-	return &Handler{service: service}
+// New{Entity}Handler creates a new {entity} handler
+func New{Entity}Handler(service *service.{Entity}Service) *{Entity}Handler {
+	return &{Entity}Handler{service: service}
 }
 
 // Create{Entity} handles {entity} creation
 // POST /api/{entities}
-func (h *Handler) Create{Entity}(c echo.Context) error {
+func (h *{Entity}Handler) Create{Entity}(c echo.Context) error {
 	var req model.Create{Entity}Request
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -213,7 +227,11 @@ func (h *Handler) Create{Entity}(c echo.Context) error {
 
 ### Step 5: Generate Router
 
-**Location**: `src/internal/service/{service}/router/router.go`
+**Location**: `src/internal/service/{service}/router/{entity_lowercase}_router.go`
+
+**File Naming**: Use lowercase entity name with underscore (e.g., `product_router.go`, `category_router.go`)
+
+**Router Function Naming**: Each entity gets its own registration function
 
 **Template Pattern**:
 
@@ -229,7 +247,7 @@ import (
 // Register{Entity}Routes registers all {entity}-related routes
 func Register{Entity}Routes(
 	e *echo.Echo,
-	{entity}Handler *handler.Handler,
+	{entity}Handler *handler.{Entity}Handler,
 	logger *zap.Logger,
 ) {
 	logger.Info("Registering {entity} routes")
@@ -254,12 +272,13 @@ func Register{Entity}Routes(
 ```
 
 **Router Rules**:
-1. Group routes by access level (public, protected, admin)
-2. Apply middleware at group level, not per-route
-3. Use RESTful naming conventions
-4. Include logger for registration confirmation
-5. Document middleware requirements
-6. Include example middleware implementations as comments
+1. Each entity has its own router file and registration function
+2. Group routes by access level (public, protected, admin)
+3. Apply middleware at group level, not per-route
+4. Use RESTful naming conventions
+5. Include logger for registration confirmation
+6. Document middleware requirements
+7. Create a shared `middleware.go` file for common middleware implementations (only if it doesn't exist)
 
 ### Step 6: Generate Module
 
@@ -280,9 +299,17 @@ import (
 // Module exports {service} service dependencies
 var Module = fx.Options(
 	fx.Provide(
-		repository.NewRepository,
-		service.NewService,
-		handler.NewHandler,
+		// Repositories
+		repository.New{Entity}Repository,
+		// Add more: repository.New{OtherEntity}Repository,
+		
+		// Services
+		service.New{Entity}Service,
+		// Add more: service.New{OtherEntity}Service,
+		
+		// Handlers
+		handler.New{Entity}Handler,
+		// Add more: handler.New{OtherEntity}Handler,
 	),
 )
 ```
@@ -291,9 +318,47 @@ var Module = fx.Options(
 1. Use `fx.Provide` for constructor functions
 2. Export as package-level `Module` variable
 3. Keep in order: repository → service → handler
-4. One module per service
+4. Add all entity constructors in the Module:
+   - `repository.New{Entity}Repository`
+   - `service.New{Entity}Service`
+   - `handler.New{Entity}Handler`
+5. One module file per service (contains all entities)
 
-### Step 7: Update or Create App
+### Step 7: Update Migration
+
+**Location**: `src/internal/service/{service}/migration/migration.go`
+
+**Update Pattern**:
+
+```go
+// RunMigrations runs database migrations for {service} service
+func RunMigrations(db *gorm.DB) error {
+	if err := db.AutoMigrate(&model.{Entity}{}); err != nil {
+		return fmt.Errorf("failed to migrate {entity} table: %w", err)
+	}
+	
+	// Add other entities...
+	
+	if err := createIndexes(db); err != nil {
+		return fmt.Errorf("failed to create indexes: %w", err)
+	}
+	
+	return nil
+}
+
+// createIndexes - Add entity-specific indexes
+// - Index on unique fields (code, email, sku)
+// - Index on searchable fields (name, type, status)
+// - Composite indexes for common queries
+```
+
+**Migration Rules**:
+1. Add `db.AutoMigrate(&model.{Entity}{})` for new entity
+2. Add relevant indexes in `createIndexes()` function
+3. Update `Seed()` function if sample data is needed
+4. Add comments for PostgreSQL-specific features (full-text search, etc.)
+
+### Step 8: Update or Create App
 
 **Location**: `src/internal/service/{service}/app.go`
 
@@ -325,6 +390,7 @@ var AppModule = fx.Options(
 	
 	// Router registration
 	fx.Invoke({service}router.Register{Entity}Routes),
+	// Add more: fx.Invoke({service}router.Register{OtherEntity}Routes),
 )
 ```
 
@@ -332,8 +398,9 @@ var AppModule = fx.Options(
 1. Import infrastructure modules (config, logger, database, server)
 2. Import service module with alias: `{service}module`
 3. Import router with alias: `{service}router`
-4. Use `fx.Invoke` for router registration
+4. Use `fx.Invoke` for each entity's router registration function
 5. Create as package-level `AppModule` variable
+6. Add one `fx.Invoke` per entity route registration
 
 ## Model Analysis Checklist
 
@@ -376,15 +443,32 @@ Before generating code, verify:
 
 After generating code, verify:
 
-- [ ] All imports are correct
+### File Organization
+- [ ] Each entity has its own repository file (`{entity}_repository.go`)
+- [ ] Each entity has its own service file (`{entity}_service.go`)
+- [ ] Each entity has its own handler file (`{entity}_handler.go`)
+- [ ] Each entity has its own router file (`{entity}_router.go`)
+- [ ] File names use lowercase with underscores
+
+### Naming Conventions
+- [ ] Struct names include entity prefix (`{Entity}Repository`, `{Entity}Service`, `{Entity}Handler`)
+- [ ] Constructor names match struct names (`New{Entity}Repository`, `New{Entity}Service`)
+- [ ] Entity name is consistently PascalCase throughout
 - [ ] Package names match directory structure
-- [ ] Entity name is consistently PascalCase
-- [ ] Service name is consistently lowercase
-- [ ] fx dependency injection is properly configured
-- [ ] Router is registered in AppModule
-- [ ] Error handling follows patterns
-- [ ] All methods have context parameter
+
+### Dependency Injection
+- [ ] Repository constructor added to module (`repository.New{Entity}Repository`)
+- [ ] Service constructor added to module (`service.New{Entity}Service`)
+- [ ] Handler constructor added to module (`handler.New{Entity}Handler`)
+- [ ] Router registration added to app (`fx.Invoke({service}router.Register{Entity}Routes)`)
+
+### Code Quality
+- [ ] All imports are correct
+- [ ] Error handling follows patterns (wrap with context, use sentinel errors)
+- [ ] All methods have context as first parameter
 - [ ] Response methods use `ToResponse()`
+- [ ] Migration file updated with new entity
+- [ ] Indexes added for unique and searchable fields
 
 ## Common Patterns by Model Type
 
@@ -410,29 +494,112 @@ After generating code, verify:
 
 ## Example Command Flow
 
-```bash
-# User creates a new model
-# File: src/internal/service/order/model/model.go
+### Scenario: Adding a Category entity to the product service
 
-# AI should automatically:
-1. Read and analyze the Order model
-2. Generate repository with Order-specific queries
-3. Generate service with order business logic
-4. Generate handler with order HTTP endpoints
-5. Generate router with order routes
-6. Generate module for dependency injection
-7. Update/create app.go with module registration
+**User Request**: "Create Category model (id, name, type, code) and generate complete service"
+
+**AI Actions**:
+
+1. **Create/Update Model** (`model/model.go`):
+   - Add `Category` struct
+   - Add `CreateCategoryRequest`, `UpdateCategoryRequest`, `CategoryResponse`
+   - Add `ToResponse()` method
+
+2. **Create Repository** (`repository/category_repository.go`):
+   ```
+   - CategoryRepository struct
+   - NewCategoryRepository() constructor
+   - GetByCode() - unique field query
+   - GetByType() - filter query
+   - CodeExists() - uniqueness check
+   - SearchCategories() - search functionality
+   ```
+
+3. **Create Service** (`service/category_service.go`):
+   ```
+   - ErrCategoryNotFound, ErrCodeExists - domain errors
+   - CategoryService struct
+   - NewCategoryService() constructor
+   - CreateCategory() - with validation
+   - GetCategoryByID(), GetCategoryByCode()
+   - GetAllCategories(), GetCategoriesByType()
+   - UpdateCategory(), DeleteCategory()
+   ```
+
+4. **Create Handler** (`handler/category_handler.go`):
+   ```
+   - CategoryHandler struct
+   - NewCategoryHandler() constructor
+   - CreateCategory(), GetCategory(), GetCategories()
+   - UpdateCategory(), DeleteCategory()
+   ```
+
+5. **Create Router** (`router/category_router.go`):
+   ```
+   - RegisterCategoryRoutes() function
+   - Public, protected, admin route groups
+   ```
+
+6. **Update Module** (`module/module.go`):
+   ```go
+   fx.Provide(
+       repository.NewProductRepository,
+       repository.NewCategoryRepository,  // ADD THIS
+       service.NewProductService,
+       service.NewCategoryService,        // ADD THIS
+       handler.NewProductHandler,
+       handler.NewCategoryHandler,        // ADD THIS
+   )
+   ```
+
+7. **Update App** (`app.go`):
+   ```go
+   fx.Invoke(productrouter.RegisterProductRoutes),
+   fx.Invoke(productrouter.RegisterCategoryRoutes),  // ADD THIS
+   ```
+
+**Result**: Clean, maintainable file structure:
+```
+product/
+├── model/
+│   └── model.go
+├── repository/
+│   ├── product_repository.go
+│   └── category_repository.go      ← NEW FILE
+├── service/
+│   ├── product_service.go
+│   └── category_service.go         ← NEW FILE
+├── handler/
+│   ├── product_handler.go
+│   └── category_handler.go         ← NEW FILE
+├── router/
+│   ├── product_router.go
+│   ├── category_router.go          ← NEW FILE
+│   └── middleware.go
+├── module/
+│   └── module.go                   ← UPDATED
+├── migration/
+│   └── migration.go                ← UPDATED (add Category to AutoMigrate)
+└── app.go                          ← UPDATED
 ```
 
 ## File Naming Conventions
 
-- Model: `model.go` (all models in one file per service)
-- Repository: `repository.go`
-- Service: `service.go`
-- Handler: `handler.go`
-- Router: `router.go`
-- Module: `module.go`
-- App: `app.go` (at service root)
+**IMPORTANT: Each entity gets its own file for better separation of concerns**
+
+- Model: `model.go` (all models in one file per service, OR separate files per entity)
+- Repository: `{entity_lowercase}_repository.go` (e.g., `product_repository.go`, `category_repository.go`)
+- Service: `{entity_lowercase}_service.go` (e.g., `product_service.go`, `category_service.go`)
+- Handler: `{entity_lowercase}_handler.go` (e.g., `product_handler.go`, `category_handler.go`)
+- Router: `{entity_lowercase}_router.go` (e.g., `product_router.go`, `category_router.go`)
+- Router Middleware: `middleware.go` (shared middleware, create only once)
+- Module: `module.go` (single file, registers all entities)
+- App: `app.go` (at service root, single file)
+
+**Entity Naming Convention**:
+- Struct names: Use entity name with suffix (e.g., `ProductRepository`, `CategoryService`, `OrderHandler`)
+- Constructor names: Use New prefix with full struct name (e.g., `NewProductRepository`, `NewCategoryService`)
+- File names: Use lowercase with underscores (e.g., `product_repository.go`, `user_service.go`)
 
 ## Import Path Pattern
 
@@ -467,22 +634,85 @@ map[string]interface{}{
 
 ## Quick Reference
 
-| Component | Responsibility | Key Pattern |
-|-----------|---------------|-------------|
-| Model | Data structure | Entity, Request, Response DTOs |
-| Repository | Data access | Embed BaseRepository, add custom queries |
-| Service | Business logic | Validate, transform, coordinate |
-| Handler | HTTP layer | Bind, validate, map errors to status codes |
-| Router | Route registration | Group by access level, apply middleware |
-| Module | DI configuration | fx.Provide constructors |
-| App | Module composition | Combine infrastructure + service modules |
+| Component | File Name | Struct Name | Constructor | Responsibility |
+|-----------|-----------|-------------|-------------|----------------|
+| Model | `model.go` | `{Entity}` | - | Data structures and DTOs |
+| Repository | `{entity}_repository.go` | `{Entity}Repository` | `New{Entity}Repository()` | Data access layer |
+| Service | `{entity}_service.go` | `{Entity}Service` | `New{Entity}Service()` | Business logic layer |
+| Handler | `{entity}_handler.go` | `{Entity}Handler` | `New{Entity}Handler()` | HTTP request handlers |
+| Router | `{entity}_router.go` | - | `Register{Entity}Routes()` | Route registration |
+| Middleware | `middleware.go` | - | Various | Shared middleware (create once) |
+| Module | `module.go` | - | - | fx.Provide all constructors |
+| App | `app.go` | - | - | fx.Invoke all route registrations |
+| Migration | `migration.go` | - | - | AutoMigrate all entities |
+
+## File Organization Strategy
+
+### ❌ OLD APPROACH (Don't Use)
+```
+product/
+├── repository/
+│   └── repository.go          ← All repositories in one file
+├── service/
+│   └── service.go             ← All services in one file
+├── handler/
+│   └── handler.go             ← All handlers in one file
+└── router/
+    └── router.go              ← All routes in one file
+```
+
+### ✅ NEW APPROACH (Use This)
+```
+product/
+├── repository/
+│   ├── product_repository.go      ← One file per entity
+│   └── category_repository.go     ← One file per entity
+├── service/
+│   ├── product_service.go         ← One file per entity
+│   └── category_service.go        ← One file per entity
+├── handler/
+│   ├── product_handler.go         ← One file per entity
+│   └── category_handler.go        ← One file per entity
+└── router/
+    ├── product_router.go          ← One file per entity
+    ├── category_router.go         ← One file per entity
+    └── middleware.go              ← Shared middleware (one file)
+```
+
+### When to Create New Files
+- **Always** create separate files for each entity within repository/, service/, handler/, and router/ directories
+- Example: When adding a `Category` entity to the `product` service:
+  - Create `repository/category_repository.go`
+  - Create `service/category_service.go`
+  - Create `handler/category_handler.go`
+  - Create `router/category_router.go`
+
+### When to Update Existing Files
+- **Module** (`module/module.go`): Update to add new constructor functions
+- **App** (`app.go`): Update to add new router registration calls
+- **Middleware** (`router/middleware.go`): Only create once; reuse for all entities
+
+### Entity Struct and Function Naming
+- Repository: `{Entity}Repository`, `New{Entity}Repository()`
+- Service: `{Entity}Service`, `New{Entity}Service()`
+- Handler: `{Entity}Handler`, `New{Entity}Handler()`
+- Router: `Register{Entity}Routes()`
+
+### Benefits of Separate Files
+1. **Maintainability**: Easier to locate and modify entity-specific code
+2. **Readability**: Smaller, focused files are easier to understand
+3. **Collaboration**: Reduces merge conflicts when multiple developers work on different entities
+4. **Testing**: Easier to write and organize entity-specific tests
+5. **Scalability**: Clean separation as the service grows
 
 ## Additional Notes
 
 - Always read the golang-patterns skill before generating code
+- **ALWAYS create separate files for each entity** (repository, service, handler, router)
 - Generate code following existing project conventions
 - Use the same error handling patterns as existing services
 - Maintain consistency with existing middleware patterns
 - Include comprehensive comments for generated code
 - Generate complete CRUD operations by default
 - Add custom methods based on model field analysis
+- Keep file names lowercase with underscores for Go conventions
