@@ -9,21 +9,207 @@ Automatically generate complete service layers following clean architecture patt
 
 ## 🎯 Key Principle: One Entity = One File
 
-**IMPORTANT**: Each business entity must have its own separate file in repository/, service/, handler/, and router/ directories.
+**IMPORTANT**: Each business entity must have its own separate file in model/, repository/, service/, handler/, and router/ directories.
 
-**File Naming**: Use lowercase with underscores: `{entity}_repository.go`, `{entity}_service.go`, `{entity}_handler.go`, `{entity}_router.go`
+**File Naming**: 
+- Model: `{entity}.go` (e.g., `product.go`, `category.go`)
+- Others: `{entity}_repository.go`, `{entity}_service.go`, `{entity}_handler.go`, `{entity}_router.go`
 
-**Struct Naming**: Use entity name as prefix: `{Entity}Repository`, `{Entity}Service`, `{Entity}Handler`
+**Struct Naming**: Use entity name as prefix: `{Entity}`, `{Entity}Repository`, `{Entity}Service`, `{Entity}Handler`
+
+## 🚀 Model Creation Workflow
+
+**When user says "create model {EntityName}":**
+
+1. **Automatically create** `src/internal/service/{service}/model/{entity}.go` with:
+   - Entity struct with base fields (ID, timestamps, soft delete)
+   - Custom fields based on user requirements
+   - GORM tags for database constraints
+   - JSON tags for API serialization
+   - TableName() method
+   - CreateRequest struct with validation tags
+   - UpdateRequest struct with optional fields
+   - Response struct
+   - ToResponse() method
+
+2. **Then automatically proceed** to generate complete service layers:
+   - Repository (Step 2)
+   - Service (Step 3)
+   - Handler (Step 4)
+   - Router (Step 5)
+   - Update Module (Step 6)
+   - Update Migration (Step 7)
+   - Update App (Step 8)
+
+**The user should only need to say "create model Product" and the entire service layer is generated automatically!**
 
 ## When to Use
 
 Trigger this skill when:
+- User says "create model {entity_name}" or "generate model for {entity_name}"
 - User creates a new model file in `src/internal/service/{service_name}/model/`
 - User asks to "generate service from model"
 - User wants CRUD operations for a business entity
 - User mentions scaffolding, generating handlers, or creating a new service
 
 ## Generation Workflow
+
+### Step 0: Create Model (If Requested)
+
+**When**: User says "create model {entity_name}" or provides entity specification
+
+**Location**: `src/internal/service/{service}/model/{entity_lowercase}.go`
+
+**File Naming**: Use lowercase entity name (e.g., `product.go`, `category.go`, `order.go`)
+
+**Template Pattern**:
+
+```go
+package model
+
+import (
+	"time"
+	"gorm.io/gorm"
+)
+
+// {Entity} represents a {entity} in the system
+type {Entity} struct {
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	
+	// Add entity-specific fields here based on user requirements
+	// Example for Product:
+	// Name        string  `gorm:"type:varchar(255);not null" json:"name"`
+	// Description string  `gorm:"type:text" json:"description"`
+	// Price       float64 `gorm:"type:decimal(10,2);not null" json:"price"`
+	// SKU         string  `gorm:"type:varchar(100);uniqueIndex;not null" json:"sku"`
+	// Stock       int     `gorm:"default:0" json:"stock"`
+	// CategoryID  uint    `gorm:"index" json:"category_id"`
+	// IsActive    bool    `gorm:"default:true" json:"is_active"`
+}
+
+// TableName sets the table name for {Entity}
+func (e *{Entity}) TableName() string {
+	return "{table_name}"
+}
+
+// Create{Entity}Request defines the request structure for creating a {entity}
+type Create{Entity}Request struct {
+	// Add required fields with validation tags
+	// Example:
+	// Name        string  `json:"name" validate:"required,min=1,max=255"`
+	// Description string  `json:"description"`
+	// Price       float64 `json:"price" validate:"required,gt=0"`
+	// SKU         string  `json:"sku" validate:"required,min=1,max=100"`
+	// Stock       int     `json:"stock" validate:"gte=0"`
+	// CategoryID  uint    `json:"category_id" validate:"required"`
+}
+
+// Update{Entity}Request defines the request structure for updating a {entity}
+type Update{Entity}Request struct {
+	// Add optional fields for update
+	// Example:
+	// Name        *string  `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	// Description *string  `json:"description,omitempty"`
+	// Price       *float64 `json:"price,omitempty" validate:"omitempty,gt=0"`
+	// Stock       *int     `json:"stock,omitempty" validate:"omitempty,gte=0"`
+	// IsActive    *bool    `json:"is_active,omitempty"`
+}
+
+// {Entity}Response defines the response structure for {entity}
+type {Entity}Response struct {
+	ID        uint      `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	
+	// Add all entity fields to include in response
+	// Match with {Entity} struct fields
+}
+
+// ToResponse converts {Entity} to {Entity}Response
+func (e *{Entity}) ToResponse() *{Entity}Response {
+	return &{Entity}Response{
+		ID:        e.ID,
+		CreatedAt: e.CreatedAt,
+		UpdatedAt: e.UpdatedAt,
+		// Map all fields from entity to response
+	}
+}
+```
+
+**Model Creation Rules**:
+1. **File per Entity**: Create separate file for each entity in the `model/` directory
+2. **Base Fields**: Always include ID, CreatedAt, UpdatedAt, DeletedAt (soft delete)
+3. **GORM Tags**: Use appropriate GORM tags for database constraints:
+   - `primarykey` for ID
+   - `type:` for specific column types
+   - `not null` for required fields
+   - `uniqueIndex` for unique fields
+   - `index` for searchable fields
+   - `default:` for default values
+4. **JSON Tags**: Always include JSON tags for API serialization
+5. **TableName Method**: Implement `TableName()` to explicitly set table name (usually plural)
+6. **Request DTOs**: Create separate `Create` and `Update` request structs
+   - Use pointers in Update requests for optional fields
+   - Add validation tags (`validate:`)
+7. **Response DTO**: Create response struct to control what data is exposed
+8. **ToResponse Method**: Implement conversion from entity to response
+
+**Common Field Types by Entity**:
+
+**Product/Item**:
+```go
+Name        string  `gorm:"type:varchar(255);not null" json:"name"`
+Description string  `gorm:"type:text" json:"description"`
+Price       float64 `gorm:"type:decimal(10,2);not null" json:"price"`
+SKU         string  `gorm:"type:varchar(100);uniqueIndex;not null" json:"sku"`
+Stock       int     `gorm:"default:0" json:"stock"`
+CategoryID  uint    `gorm:"index" json:"category_id"`
+IsActive    bool    `gorm:"default:true" json:"is_active"`
+```
+
+**User/Account**:
+```go
+Email     string `gorm:"type:varchar(255);uniqueIndex;not null" json:"email"`
+Username  string `gorm:"type:varchar(100);uniqueIndex;not null" json:"username"`
+Password  string `gorm:"type:varchar(255);not null" json:"-"`
+FirstName string `gorm:"type:varchar(100)" json:"first_name"`
+LastName  string `gorm:"type:varchar(100)" json:"last_name"`
+Role      string `gorm:"type:varchar(50);default:'user'" json:"role"`
+IsActive  bool   `gorm:"default:true" json:"is_active"`
+```
+
+**Category/Type**:
+```go
+Name        string `gorm:"type:varchar(255);not null" json:"name"`
+Code        string `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
+Description string `gorm:"type:text" json:"description"`
+Type        string `gorm:"type:varchar(50);index" json:"type"`
+IsActive    bool   `gorm:"default:true" json:"is_active"`
+```
+
+**Order/Transaction**:
+```go
+OrderNumber string    `gorm:"type:varchar(100);uniqueIndex;not null" json:"order_number"`
+UserID      uint      `gorm:"index;not null" json:"user_id"`
+TotalAmount float64   `gorm:"type:decimal(10,2);not null" json:"total_amount"`
+Status      string    `gorm:"type:varchar(50);index;default:'pending'" json:"status"`
+OrderDate   time.Time `gorm:"not null" json:"order_date"`
+Notes       string    `gorm:"type:text" json:"notes"`
+```
+
+**Model Creation Workflow**:
+1. Ask user for entity name if not provided
+2. Ask user for key fields and their types if not specified
+3. Create model file in `src/internal/service/{service}/model/{entity}.go`
+4. Generate base entity struct with GORM tags
+5. Generate TableName() method
+6. Generate Create/Update request structs with validation tags
+7. Generate Response struct
+8. Generate ToResponse() method
+9. Confirm creation and proceed to generate service layers (Step 1+)
 
 ### Step 1: Read and Analyze Model
 
@@ -432,8 +618,9 @@ Always apply principles from the `golang-patterns` skill:
 
 Before generating code, verify:
 
-- [ ] Model file exists and is readable
-- [ ] Target directories exist (`handler/`, `service/`, etc.)
+- [ ] If user says "create model", generate model file first (Step 0)
+- [ ] Model file exists and is readable (or just created)
+- [ ] Target directories exist (`model/`, `handler/`, `service/`, etc.)
 - [ ] Extract entity name, table name, and all fields
 - [ ] Identify unique constraints for existence checks
 - [ ] Identify searchable/filterable fields
@@ -500,10 +687,19 @@ After generating code, verify:
 
 **AI Actions**:
 
-1. **Create/Update Model** (`model/model.go`):
-   - Add `Category` struct
-   - Add `CreateCategoryRequest`, `UpdateCategoryRequest`, `CategoryResponse`
-   - Add `ToResponse()` method
+1. **Create Model** (`model/category.go`) - **NEW SEPARATE FILE**:
+   - Create `Category` struct with fields:
+     - ID, CreatedAt, UpdatedAt, DeletedAt (base fields)
+     - Name (varchar 255, not null, searchable)
+     - Code (varchar 50, unique index, not null)
+     - Type (varchar 50, index, for filtering)
+     - Description (text, optional)
+     - IsActive (bool, default true)
+   - Implement `TableName()` method returning "categories"
+   - Create `CreateCategoryRequest` with validation tags
+   - Create `UpdateCategoryRequest` with optional pointer fields
+   - Create `CategoryResponse` struct
+   - Implement `ToResponse()` method
 
 2. **Create Repository** (`repository/category_repository.go`):
    ```
@@ -562,7 +758,8 @@ After generating code, verify:
 ```
 product/
 ├── model/
-│   └── model.go
+│   ├── product.go
+│   └── category.go                 ← NEW MODEL FILE (separate from product.go)
 ├── repository/
 │   ├── product_repository.go
 │   └── category_repository.go      ← NEW FILE
@@ -587,14 +784,14 @@ product/
 
 **IMPORTANT: Each entity gets its own file for better separation of concerns**
 
-- Model: `model.go` (all models in one file per service, OR separate files per entity)
-- Repository: `{entity_lowercase}_repository.go` (e.g., `product_repository.go`, `category_repository.go`)
-- Service: `{entity_lowercase}_service.go` (e.g., `product_service.go`, `category_service.go`)
-- Handler: `{entity_lowercase}_handler.go` (e.g., `product_handler.go`, `category_handler.go`)
-- Router: `{entity_lowercase}_router.go` (e.g., `product_router.go`, `category_router.go`)
-- Router Middleware: `middleware.go` (shared middleware, create only once)
-- Module: `module.go` (single file, registers all entities)
-- App: `app.go` (at service root, single file)
+- **Model**: `{entity_lowercase}.go` (e.g., `product.go`, `category.go`) - **ONE FILE PER ENTITY**
+- **Repository**: `{entity_lowercase}_repository.go` (e.g., `product_repository.go`, `category_repository.go`)
+- **Service**: `{entity_lowercase}_service.go` (e.g., `product_service.go`, `category_service.go`)
+- **Handler**: `{entity_lowercase}_handler.go` (e.g., `product_handler.go`, `category_handler.go`)
+- **Router**: `{entity_lowercase}_router.go` (e.g., `product_router.go`, `category_router.go`)
+- **Router Middleware**: `middleware.go` (shared middleware, create only once)
+- **Module**: `module.go` (single file, registers all entities)
+- **App**: `app.go` (at service root, single file)
 
 **Entity Naming Convention**:
 - Struct names: Use entity name with suffix (e.g., `ProductRepository`, `CategoryService`, `OrderHandler`)
@@ -636,7 +833,7 @@ map[string]interface{}{
 
 | Component | File Name | Struct Name | Constructor | Responsibility |
 |-----------|-----------|-------------|-------------|----------------|
-| Model | `model.go` | `{Entity}` | - | Data structures and DTOs |
+| Model | `{entity}.go` | `{Entity}` | - | Data structures and DTOs (one file per entity) |
 | Repository | `{entity}_repository.go` | `{Entity}Repository` | `New{Entity}Repository()` | Data access layer |
 | Service | `{entity}_service.go` | `{Entity}Service` | `New{Entity}Service()` | Business logic layer |
 | Handler | `{entity}_handler.go` | `{Entity}Handler` | `New{Entity}Handler()` | HTTP request handlers |
@@ -664,6 +861,9 @@ product/
 ### ✅ NEW APPROACH (Use This)
 ```
 product/
+├── model/
+│   ├── product.go                 ← One file per entity
+│   └── category.go                ← One file per entity
 ├── repository/
 │   ├── product_repository.go      ← One file per entity
 │   └── category_repository.go     ← One file per entity
@@ -680,8 +880,9 @@ product/
 ```
 
 ### When to Create New Files
-- **Always** create separate files for each entity within repository/, service/, handler/, and router/ directories
-- Example: When adding a `Category` entity to the `product` service:
+- **Always** create separate files for each entity within model/, repository/, service/, handler/, and router/ directories
+- Example: When user says "create model Category" or adding a `Category` entity to the `product` service:
+  - Create `model/category.go` (the model file itself)
   - Create `repository/category_repository.go`
   - Create `service/category_service.go`
   - Create `handler/category_handler.go`
@@ -708,7 +909,8 @@ product/
 ## Additional Notes
 
 - Always read the golang-patterns skill before generating code
-- **ALWAYS create separate files for each entity** (repository, service, handler, router)
+- **ALWAYS create separate files for each entity** (model, repository, service, handler, router)
+- **When user says "create model", automatically create the model in a separate file** in `model/{entity}.go`
 - Generate code following existing project conventions
 - Use the same error handling patterns as existing services
 - Maintain consistency with existing middleware patterns
@@ -716,3 +918,4 @@ product/
 - Generate complete CRUD operations by default
 - Add custom methods based on model field analysis
 - Keep file names lowercase with underscores for Go conventions
+- After creating model, automatically proceed to generate complete service layers (Steps 1-8)
