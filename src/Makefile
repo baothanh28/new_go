@@ -24,6 +24,14 @@ dev: ## Run the application in development mode with hot reload (requires air)
 	@echo "Starting $(APP_NAME) in development mode..."
 	@air
 
+product: ## Run product service with hot reload (requires air)
+	@echo "Starting product service in development mode..."
+	@air -c .air.product.toml
+
+health: ## Run health service with hot reload (requires air)
+	@echo "Starting health service in development mode..."
+	@air -c .air.health.toml
+
 test: ## Run tests
 	@echo "Running tests..."
 	@go test -v -race -coverprofile=coverage.out ./...
