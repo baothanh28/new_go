@@ -10,15 +10,15 @@ import (
 
 // Repository handles product data access
 type Repository struct {
-	*database.BaseRepository[model.Product]
+	*database.TenantRepo[model.Product]
 	db *gorm.DB
 }
 
-// NewRepository creates a new product repository
-func NewRepository(db *gorm.DB) *Repository {
+// NewRepository creates a new product repository using tenant database
+func NewRepository(dbManager *database.DatabaseManager) *Repository {
 	return &Repository{
-		BaseRepository: database.NewBaseRepository[model.Product](db),
-		db:             db,
+		TenantRepo: database.NewTenantRepo[model.Product](dbManager.TenantConnManager),
+		db:         dbManager.TenantDB, // For custom queries
 	}
 }
 

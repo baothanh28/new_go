@@ -10,14 +10,14 @@ import (
 
 // Repository provides database operations for users
 type Repository struct {
-	*database.BaseRepository[User]
+	*database.MasterRepo[User]
 }
 
-// NewRepository creates a new user repository
+// NewRepository creates a new user repository using master database
 func NewRepository(dbManager *database.DatabaseManager) *Repository {
 	// Use master database for user authentication
 	return &Repository{
-		BaseRepository: database.NewBaseRepository[User](dbManager.MasterDB),
+		MasterRepo: database.NewMasterRepo[User](dbManager),
 	}
 }
 

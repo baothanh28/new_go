@@ -13,8 +13,9 @@ import (
 
 // DatabaseManager manages master and tenant database connections
 type DatabaseManager struct {
-	MasterDB *gorm.DB
-	TenantDB *gorm.DB
+	MasterDB         *gorm.DB
+	TenantDB         *gorm.DB // Deprecated: Use TenantConnManager for dynamic connections
+	TenantConnManager *TenantConnectionManager
 }
 
 // NewDatabaseManager creates a new DatabaseManager with master and tenant connections
@@ -28,7 +29,7 @@ func NewDatabaseManager(cfg *config.Config, log *zap.Logger) (*DatabaseManager, 
 		zap.String("host", cfg.MasterDatabase.Host),
 		zap.String("name", cfg.MasterDatabase.Name))
 	
-	// Create tenant database connection
+	// Create tenant database connection (for backward compatibility)
 	tenantDB, err := NewDatabase(cfg.TenantDatabase, log)
 	if err != nil {
 		return nil, fmt.Errorf("create tenant database connection: %w", err)
@@ -37,9 +38,14 @@ func NewDatabaseManager(cfg *config.Config, log *zap.Logger) (*DatabaseManager, 
 		zap.String("host", cfg.TenantDatabase.Host),
 		zap.String("name", cfg.TenantDatabase.Name))
 	
+	// Create tenant connection manager for dynamic connections
+	tenantConnManager := NewTenantConnectionManager(masterDB, log)
+	log.Info("Tenant connection manager initialized")
+	
 	return &DatabaseManager{
-		MasterDB: masterDB,
-		TenantDB: tenantDB,
+		MasterDB:          masterDB,
+		TenantDB:          tenantDB, // Kept for backward compatibility
+		TenantConnManager: tenantConnManager,
 	}, nil
 }
 

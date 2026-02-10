@@ -15,7 +15,7 @@ master_database:
 tenant_database:
   driver: "postgres"
   host: "localhost"
-  port: 5432
+  port: 5433
   name: "tenant_db"
   user: "postgres"
   password: "password"

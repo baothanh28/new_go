@@ -36,6 +36,12 @@ func ContextMiddleware(dbManager *database.DatabaseManager) echo.MiddlewareFunc 
 			// Store context in Echo context
 			c.Set("requestContext", ctx)
 			
+			// Add tenant ID to Go context for repository layer
+			if tenantID != "" {
+				goCtx := database.WithTenantID(c.Request().Context(), tenantID)
+				c.SetRequest(c.Request().WithContext(goCtx))
+			}
+			
 			return next(c)
 		}
 	}

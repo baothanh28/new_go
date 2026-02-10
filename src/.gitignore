@@ -46,8 +46,7 @@ tmp/
 temp/
 
 # Air (hot reload tool) files
-tmp/
-.air.toml
+# Keep .air.toml for sharing configuration with team
 
 # Database files
 *.db

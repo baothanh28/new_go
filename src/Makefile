@@ -48,18 +48,18 @@ deps: ## Download dependencies
 
 docker-up: ## Start PostgreSQL databases with Docker Compose
 	@echo "Starting Docker containers..."
-	@docker-compose up -d
+	@docker-compose -f ../deployment/docker-compose.yml up -d
 	@echo "Waiting for databases to be ready..."
 	@sleep 3
 	@echo "Docker containers started"
 
 docker-down: ## Stop Docker containers
 	@echo "Stopping Docker containers..."
-	@docker-compose down
+	@docker-compose -f ../deployment/docker-compose.yml down
 	@echo "Docker containers stopped"
 
 docker-logs: ## View Docker container logs
-	@docker-compose logs -f
+	@docker-compose -f ../deployment/docker-compose.yml logs -f
 
 lint: ## Run linter
 	@echo "Running linter..."
