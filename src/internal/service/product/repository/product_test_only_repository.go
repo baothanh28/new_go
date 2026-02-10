@@ -10,15 +10,15 @@ import (
 
 // ProductTestOnlyRepository handles product test only data access
 type ProductTestOnlyRepository struct {
-	*database.BaseRepository[model.ProductTestOnly]
+	*database.TenantRepo[model.ProductTestOnly]
 	db *gorm.DB
 }
 
-// NewProductTestOnlyRepository creates a new product test only repository
-func NewProductTestOnlyRepository(db *gorm.DB) *ProductTestOnlyRepository {
+// NewProductTestOnlyRepository creates a new product test only repository using tenant database
+func NewProductTestOnlyRepository(dbManager *database.DatabaseManager) *ProductTestOnlyRepository {
 	return &ProductTestOnlyRepository{
-		BaseRepository: database.NewBaseRepository[model.ProductTestOnly](db),
-		db:             db,
+		TenantRepo: database.NewTenantRepo[model.ProductTestOnly](dbManager.TenantConnManager),
+		db:         dbManager.TenantDB, // For custom queries
 	}
 }
 
