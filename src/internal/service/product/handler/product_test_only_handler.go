@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"github.com/labstack/echo/v4"
-	"myapp/internal/service/product/model"
+	"myapp/internal/service/product/dto"
 	"myapp/internal/service/product/service"
 )
 
@@ -22,7 +22,7 @@ func NewProductTestOnlyHandler(service *service.ProductTestOnlyService) *Product
 // CreateProductTestOnly handles product test only creation
 // POST /api/product-test-only
 func (h *ProductTestOnlyHandler) CreateProductTestOnly(c echo.Context) error {
-	var req model.CreateProductTestOnlyRequest
+	var req dto.CreateProductTestOnlyRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid request body",
@@ -35,7 +35,7 @@ func (h *ProductTestOnlyHandler) CreateProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	entity, err := h.service.CreateProductTestOnly(c.Request().Context(), &req)
+	response, err := h.service.CreateProductTestOnly(c.Request().Context(), &req)
 	if err != nil {
 		if errors.Is(err, service.ErrCodeExists) {
 			return c.JSON(http.StatusConflict, map[string]string{
@@ -47,7 +47,7 @@ func (h *ProductTestOnlyHandler) CreateProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusCreated, entity.ToResponse())
+	return c.JSON(http.StatusCreated, response)
 }
 
 // GetProductTestOnly handles retrieving a single product test only by ID
@@ -60,7 +60,7 @@ func (h *ProductTestOnlyHandler) GetProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	entity, err := h.service.GetProductTestOnlyByID(c.Request().Context(), uint(id))
+	response, err := h.service.GetProductTestOnlyByID(c.Request().Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, service.ErrProductTestOnlyNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{
@@ -72,7 +72,7 @@ func (h *ProductTestOnlyHandler) GetProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, entity.ToResponse())
+	return c.JSON(http.StatusOK, response)
 }
 
 // GetProductTestOnlyByCode handles retrieving a product test only by code
@@ -85,7 +85,7 @@ func (h *ProductTestOnlyHandler) GetProductTestOnlyByCode(c echo.Context) error 
 		})
 	}
 
-	entity, err := h.service.GetProductTestOnlyByCode(c.Request().Context(), code)
+	response, err := h.service.GetProductTestOnlyByCode(c.Request().Context(), code)
 	if err != nil {
 		if errors.Is(err, service.ErrProductTestOnlyNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{
@@ -97,7 +97,7 @@ func (h *ProductTestOnlyHandler) GetProductTestOnlyByCode(c echo.Context) error 
 		})
 	}
 
-	return c.JSON(http.StatusOK, entity.ToResponse())
+	return c.JSON(http.StatusOK, response)
 }
 
 // GetAllProductTestOnly handles retrieving all product test only records
@@ -106,16 +106,11 @@ func (h *ProductTestOnlyHandler) GetAllProductTestOnly(c echo.Context) error {
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 	offset, _ := strconv.Atoi(c.QueryParam("offset"))
 
-	entities, err := h.service.GetAllProductTestOnly(c.Request().Context(), limit, offset)
+	responses, err := h.service.GetAllProductTestOnly(c.Request().Context(), limit, offset)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to get product test only records",
 		})
-	}
-
-	responses := make([]*model.ProductTestOnlyResponse, len(entities))
-	for i, entity := range entities {
-		responses[i] = entity.ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -138,16 +133,11 @@ func (h *ProductTestOnlyHandler) GetProductTestOnlyByType(c echo.Context) error 
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 	offset, _ := strconv.Atoi(c.QueryParam("offset"))
 
-	entities, err := h.service.GetProductTestOnlyByType(c.Request().Context(), entityType, limit, offset)
+	responses, err := h.service.GetProductTestOnlyByType(c.Request().Context(), entityType, limit, offset)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to get product test only records by type",
 		})
-	}
-
-	responses := make([]*model.ProductTestOnlyResponse, len(entities))
-	for i, entity := range entities {
-		responses[i] = entity.ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -170,16 +160,11 @@ func (h *ProductTestOnlyHandler) SearchProductTestOnly(c echo.Context) error {
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 	offset, _ := strconv.Atoi(c.QueryParam("offset"))
 
-	entities, err := h.service.SearchProductTestOnly(c.Request().Context(), name, limit, offset)
+	responses, err := h.service.SearchProductTestOnly(c.Request().Context(), name, limit, offset)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to search product test only records",
 		})
-	}
-
-	responses := make([]*model.ProductTestOnlyResponse, len(entities))
-	for i, entity := range entities {
-		responses[i] = entity.ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -199,7 +184,7 @@ func (h *ProductTestOnlyHandler) UpdateProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	var req model.UpdateProductTestOnlyRequest
+	var req dto.UpdateProductTestOnlyRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid request body",
@@ -212,7 +197,7 @@ func (h *ProductTestOnlyHandler) UpdateProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	entity, err := h.service.UpdateProductTestOnly(c.Request().Context(), uint(id), &req)
+	response, err := h.service.UpdateProductTestOnly(c.Request().Context(), uint(id), &req)
 	if err != nil {
 		if errors.Is(err, service.ErrProductTestOnlyNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{
@@ -229,7 +214,7 @@ func (h *ProductTestOnlyHandler) UpdateProductTestOnly(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, entity.ToResponse())
+	return c.JSON(http.StatusOK, response)
 }
 
 // DeleteProductTestOnly handles deleting a product test only

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"myapp/internal/service/product/model"
+	"myapp/internal/service/product/dto"
 	"myapp/internal/service/product/repository"
 )
 
@@ -25,7 +25,7 @@ func NewProductTestOnlyService(repo *repository.ProductTestOnlyRepository) *Prod
 }
 
 // CreateProductTestOnly creates a new product test only
-func (s *ProductTestOnlyService) CreateProductTestOnly(ctx context.Context, req *model.CreateProductTestOnlyRequest) (*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) CreateProductTestOnly(ctx context.Context, req *dto.CreateProductTestOnlyRequest) (*dto.ProductTestOnlyResponse, error) {
 	// Check if code already exists
 	exists, err := s.repo.CodeExists(ctx, req.Code)
 	if err != nil {
@@ -35,23 +35,20 @@ func (s *ProductTestOnlyService) CreateProductTestOnly(ctx context.Context, req 
 		return nil, ErrCodeExists
 	}
 
-	// Create entity from request
-	entity := &model.ProductTestOnly{
-		Name: req.Name,
-		Type: req.Type,
-		Code: req.Code,
-	}
+	// Create entity from request DTO
+	entity := req.ToProductTestOnlyEntity()
 
 	// Save to database
 	if err := s.repo.Insert(ctx, entity); err != nil {
 		return nil, fmt.Errorf("create product test only: %w", err)
 	}
 
-	return entity, nil
+	// Convert to response DTO before returning
+	return dto.ToProductTestOnlyResponse(entity), nil
 }
 
 // GetProductTestOnlyByID retrieves product test only by ID
-func (s *ProductTestOnlyService) GetProductTestOnlyByID(ctx context.Context, id uint) (*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) GetProductTestOnlyByID(ctx context.Context, id uint) (*dto.ProductTestOnlyResponse, error) {
 	entity, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -59,11 +56,12 @@ func (s *ProductTestOnlyService) GetProductTestOnlyByID(ctx context.Context, id 
 		}
 		return nil, fmt.Errorf("get product test only by ID: %w", err)
 	}
-	return entity, nil
+	// Convert to response DTO before returning
+	return dto.ToProductTestOnlyResponse(entity), nil
 }
 
 // GetProductTestOnlyByCode retrieves product test only by code
-func (s *ProductTestOnlyService) GetProductTestOnlyByCode(ctx context.Context, code string) (*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) GetProductTestOnlyByCode(ctx context.Context, code string) (*dto.ProductTestOnlyResponse, error) {
 	entity, err := s.repo.GetByCode(ctx, code)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -71,11 +69,12 @@ func (s *ProductTestOnlyService) GetProductTestOnlyByCode(ctx context.Context, c
 		}
 		return nil, fmt.Errorf("get product test only by code: %w", err)
 	}
-	return entity, nil
+	// Convert to response DTO before returning
+	return dto.ToProductTestOnlyResponse(entity), nil
 }
 
 // GetAllProductTestOnly retrieves all product test only records with pagination
-func (s *ProductTestOnlyService) GetAllProductTestOnly(ctx context.Context, limit, offset int) ([]*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) GetAllProductTestOnly(ctx context.Context, limit, offset int) ([]*dto.ProductTestOnlyResponse, error) {
 	// Set default limit if not provided
 	if limit <= 0 {
 		limit = 10
@@ -88,11 +87,13 @@ func (s *ProductTestOnlyService) GetAllProductTestOnly(ctx context.Context, limi
 	if err != nil {
 		return nil, fmt.Errorf("get all product test only: %w", err)
 	}
-	return entities, nil
+	
+	// Convert entities to response DTOs
+	return dto.ToProductTestOnlyResponseList(entities), nil
 }
 
 // GetProductTestOnlyByType retrieves product test only records by type
-func (s *ProductTestOnlyService) GetProductTestOnlyByType(ctx context.Context, entityType string, limit, offset int) ([]*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) GetProductTestOnlyByType(ctx context.Context, entityType string, limit, offset int) ([]*dto.ProductTestOnlyResponse, error) {
 	// Set default limit if not provided
 	if limit <= 0 {
 		limit = 10
@@ -105,11 +106,13 @@ func (s *ProductTestOnlyService) GetProductTestOnlyByType(ctx context.Context, e
 	if err != nil {
 		return nil, fmt.Errorf("get product test only by type: %w", err)
 	}
-	return entities, nil
+	
+	// Convert entities to response DTOs
+	return dto.ToProductTestOnlyResponseList(entities), nil
 }
 
 // SearchProductTestOnly searches product test only records by name
-func (s *ProductTestOnlyService) SearchProductTestOnly(ctx context.Context, name string, limit, offset int) ([]*model.ProductTestOnly, error) {
+func (s *ProductTestOnlyService) SearchProductTestOnly(ctx context.Context, name string, limit, offset int) ([]*dto.ProductTestOnlyResponse, error) {
 	// Set default limit if not provided
 	if limit <= 0 {
 		limit = 10
@@ -122,15 +125,20 @@ func (s *ProductTestOnlyService) SearchProductTestOnly(ctx context.Context, name
 	if err != nil {
 		return nil, fmt.Errorf("search product test only: %w", err)
 	}
-	return entities, nil
+	
+	// Convert entities to response DTOs
+	return dto.ToProductTestOnlyResponseList(entities), nil
 }
 
 // UpdateProductTestOnly updates a product test only
-func (s *ProductTestOnlyService) UpdateProductTestOnly(ctx context.Context, id uint, req *model.UpdateProductTestOnlyRequest) (*model.ProductTestOnly, error) {
-	// Check if entity exists
-	entity, err := s.GetProductTestOnlyByID(ctx, id)
+func (s *ProductTestOnlyService) UpdateProductTestOnly(ctx context.Context, id uint, req *dto.UpdateProductTestOnlyRequest) (*dto.ProductTestOnlyResponse, error) {
+	// Check if entity exists and get current data
+	entity, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrProductTestOnlyNotFound
+		}
+		return nil, fmt.Errorf("get product test only by ID: %w", err)
 	}
 
 	// If code is being updated, check if new code already exists
@@ -158,7 +166,8 @@ func (s *ProductTestOnlyService) UpdateProductTestOnly(ctx context.Context, id u
 		return nil, fmt.Errorf("update product test only: %w", err)
 	}
 
-	return entity, nil
+	// Convert to response DTO before returning
+	return dto.ToProductTestOnlyResponse(entity), nil
 }
 
 // DeleteProductTestOnly deletes a product test only (soft delete)
