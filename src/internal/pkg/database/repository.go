@@ -156,3 +156,29 @@ func (r *BaseRepository[T]) WithTx(tx *gorm.DB) *BaseRepository[T] {
 func (r *BaseRepository[T]) GetDB() *gorm.DB {
 	return r.db
 }
+
+// MasterRepo provides repository operations for entities stored in the master database
+// Used for: tenant metadata, user authentication, system configuration, cross-tenant data
+type MasterRepo[T any] struct {
+	*BaseRepository[T]
+}
+
+// NewMasterRepo creates a new repository connected to the master database
+func NewMasterRepo[T any](dbManager *DatabaseManager) *MasterRepo[T] {
+	return &MasterRepo[T]{
+		BaseRepository: NewBaseRepository[T](dbManager.MasterDB),
+	}
+}
+
+// TenantRepo provides repository operations for entities stored in tenant databases
+// Used for: products, orders, customers, tenant-specific business data
+type TenantRepo[T any] struct {
+	*BaseRepository[T]
+}
+
+// NewTenantRepo creates a new repository connected to the tenant database
+func NewTenantRepo[T any](dbManager *DatabaseManager) *TenantRepo[T] {
+	return &TenantRepo[T]{
+		BaseRepository: NewBaseRepository[T](dbManager.TenantDB),
+	}
+}
