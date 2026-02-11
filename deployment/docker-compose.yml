@@ -28,7 +28,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./deployment/tenant-data:/var/lib/postgresql/data
+      - ./data/tenant-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -46,7 +46,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./deployment/tenant-db-1-data:/var/lib/mysql
+      - ./data/tenant-db-1-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-hmysql", "-uroot", "-prootmysqlpass"]
       interval: 10s

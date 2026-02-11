@@ -1,5 +1,20 @@
 .PHONY: help build run test clean migrate docker-up docker-down
 
+# Detect OS
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    RM := cmd /C del /Q /F
+    RMDIR := cmd /C rmdir /S /Q
+    SLEEP := timeout /T 3 /NOBREAK >nul
+    INIT_MASTER_DB := ..\deployment\init-master-db.bat
+else
+    DETECTED_OS := $(shell uname -s)
+    RM := rm -f
+    RMDIR := rm -rf
+    SLEEP := sleep 3
+    INIT_MASTER_DB := ../deployment/init-master-db.sh
+endif
+
 # Variables
 APP_NAME=myapp
 BUILD_DIR=bin
@@ -9,7 +24,22 @@ BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
 help: ## Display this help message
 	@echo "Available commands:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@echo "  build           - Build the application binary"
+	@echo "  run             - Run the application (serve command)"
+	@echo "  dev             - Run the application in development mode with hot reload"
+	@echo "  product         - Run product service with hot reload"
+	@echo "  health          - Run health service with hot reload"
+	@echo "  test            - Run tests"
+	@echo "  migrate         - Run database migrations"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  deps            - Download dependencies"
+	@echo "  docker-up       - Start PostgreSQL databases with Docker Compose"
+	@echo "  docker-down     - Stop Docker containers"
+	@echo "  docker-logs     - View Docker container logs"
+	@echo "  init-master-db  - Initialize master database with tenants table and seed data"
+	@echo "  lint            - Run linter"
+	@echo "  fmt             - Format code"
+	@echo "  version         - Display version information"
 
 build: ## Build the application binary
 	@echo "Building $(APP_NAME)..."
@@ -44,8 +74,14 @@ migrate: ## Run database migrations
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
-	@rm -rf $(BUILD_DIR)
-	@rm -f coverage.out coverage.html
+ifeq ($(OS),Windows_NT)
+	@if exist $(BUILD_DIR) $(RMDIR) $(BUILD_DIR) 2>nul || echo Build dir clean
+	@if exist coverage.out $(RM) coverage.out 2>nul || echo Coverage files clean
+	@if exist coverage.html $(RM) coverage.html 2>nul || echo Coverage files clean
+else
+	@$(RMDIR) $(BUILD_DIR) 2>/dev/null || true
+	@$(RM) coverage.out coverage.html 2>/dev/null || true
+endif
 	@echo "Clean complete"
 
 deps: ## Download dependencies
@@ -58,7 +94,7 @@ docker-up: ## Start PostgreSQL databases with Docker Compose
 	@echo "Starting Docker containers..."
 	@docker-compose -f ../deployment/docker-compose.yml up -d
 	@echo "Waiting for databases to be ready..."
-	@sleep 3
+	@$(SLEEP)
 	@echo "Docker containers started"
 
 docker-down: ## Stop Docker containers
@@ -68,6 +104,10 @@ docker-down: ## Stop Docker containers
 
 docker-logs: ## View Docker container logs
 	@docker-compose -f ../deployment/docker-compose.yml logs -f
+
+init-master-db: ## Initialize master database with tenants table and seed data
+	@echo "Initializing master database..."
+	@$(INIT_MASTER_DB)
 
 lint: ## Run linter
 	@echo "Running linter..."

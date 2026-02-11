@@ -55,3 +55,6 @@ temp/
 
 # Config overrides (keep template)
 config/config.local.yaml
+
+# Deployment data (Docker volumes and local data)
+../deployment/data/
