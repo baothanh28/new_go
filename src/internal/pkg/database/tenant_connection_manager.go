@@ -41,26 +41,18 @@ func (m *TenantConnectionManager) GetTenantDB(ctx context.Context, tenantID stri
 	// Configure GORM logger
 	gormLogger := logger.Default.LogMode(logger.Silent)
 
-	// Create database connection based on tenant's database type
+	// Create database connection based on tenant's database type using the connection string
 	var dialector gorm.Dialector
-	var dsn string
 
 	switch tenant.DBType {
 	case "postgresql", "postgres":
-		dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			tenant.DBHost, tenant.DBPort, tenant.DBUser, tenant.DBPassword, tenant.DBName)
-		dialector = postgres.Open(dsn)
+		dialector = postgres.Open(tenant.Cnn)
 
 	case "mysql":
-		// MySQL DSN format: user:password@tcp(host:port)/dbname?parseTime=true
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=UTC",
-			tenant.DBUser, tenant.DBPassword, tenant.DBHost, tenant.DBPort, tenant.DBName)
-		dialector = mysql.Open(dsn)
+		dialector = mysql.Open(tenant.Cnn)
 
 	case "sqlite":
-		// SQLite uses file path as DSN
-		dsn = tenant.DBName // DBName should contain the file path for SQLite
-		dialector = sqlite.Open(dsn)
+		dialector = sqlite.Open(tenant.Cnn)
 
 	default:
 		return nil, fmt.Errorf("unsupported database type '%s' for tenant %s", tenant.DBType, tenantID)
@@ -74,7 +66,7 @@ func (m *TenantConnectionManager) GetTenantDB(ctx context.Context, tenantID stri
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("open %s database %s: %w", tenant.DBType, tenant.DBName, err)
+		return nil, fmt.Errorf("open %s database for tenant %s: %w", tenant.DBType, tenantID, err)
 	}
 
 	// Get underlying SQL DB to configure connection pool
@@ -90,13 +82,12 @@ func (m *TenantConnectionManager) GetTenantDB(ctx context.Context, tenantID stri
 
 	// Test connection
 	if err := sqlDB.Ping(); err != nil {
-		return nil, fmt.Errorf("ping %s database %s: %w", tenant.DBType, tenant.DBName, err)
+		return nil, fmt.Errorf("ping %s database for tenant %s: %w", tenant.DBType, tenantID, err)
 	}
 
 	m.logger.Debug("Tenant database connection established",
 		zap.String("tenant_id", tenantID),
-		zap.String("db_type", tenant.DBType),
-		zap.String("db_name", tenant.DBName))
+		zap.String("db_type", tenant.DBType))
 
 	return db, nil
 }

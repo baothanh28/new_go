@@ -57,17 +57,13 @@ func TestTenantConnectionManager_GetTenantConfig(t *testing.T) {
 	t.Run("get existing tenant config", func(t *testing.T) {
 		// Create test tenant
 		tenant := &Tenant{
-			ID:         "tenant-123",
-			Name:       "Test Tenant",
-			IsActive:   true,
-			DBType:     "sqlite",
-			DBHost:     "localhost",
-			DBPort:     5432,
-			DBName:     ":memory:",
-			DBUser:     "test_user",
-			DBPassword: "test_pass",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "tenant-123",
+			Name:      "Test Tenant",
+			IsActive:  true,
+			DBType:    "sqlite",
+			Cnn:       ":memory:",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -99,17 +95,13 @@ func TestTenantConnectionManager_GetTenantDB(t *testing.T) {
 	t.Run("get tenant DB for SQLite tenant", func(t *testing.T) {
 		// Create SQLite tenant
 		tenant := &Tenant{
-			ID:         "sqlite-tenant",
-			Name:       "SQLite Tenant",
-			IsActive:   true,
-			DBType:     "sqlite",
-			DBHost:     "",
-			DBPort:     0,
-			DBName:     ":memory:",
-			DBUser:     "",
-			DBPassword: "",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "sqlite-tenant",
+			Name:      "SQLite Tenant",
+			IsActive:  true,
+			DBType:    "sqlite",
+			Cnn:       ":memory:",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -136,17 +128,13 @@ func TestTenantConnectionManager_GetTenantDB(t *testing.T) {
 	t.Run("fail to get DB for inactive tenant", func(t *testing.T) {
 		// Create inactive tenant
 		tenant := &Tenant{
-			ID:         "inactive-tenant",
-			Name:       "Inactive Tenant",
-			IsActive:   false,
-			DBType:     "sqlite",
-			DBHost:     "",
-			DBPort:     0,
-			DBName:     ":memory:",
-			DBUser:     "",
-			DBPassword: "",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "inactive-tenant",
+			Name:      "Inactive Tenant",
+			IsActive:  false,
+			DBType:    "sqlite",
+			Cnn:       ":memory:",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -161,17 +149,13 @@ func TestTenantConnectionManager_GetTenantDB(t *testing.T) {
 	t.Run("fail with unsupported database type", func(t *testing.T) {
 		// Create tenant with unsupported DB type
 		tenant := &Tenant{
-			ID:         "unsupported-tenant",
-			Name:       "Unsupported Tenant",
-			IsActive:   true,
-			DBType:     "mongodb",
-			DBHost:     "localhost",
-			DBPort:     27017,
-			DBName:     "test_db",
-			DBUser:     "test_user",
-			DBPassword: "test_pass",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "unsupported-tenant",
+			Name:      "Unsupported Tenant",
+			IsActive:  true,
+			DBType:    "mongodb",
+			Cnn:       "mongodb://localhost:27017/test_db",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -196,17 +180,13 @@ func TestTenantConnectionManager_PostgreSQL(t *testing.T) {
 
 		// Create PostgreSQL tenant
 		tenant := &Tenant{
-			ID:         "postgres-tenant",
-			Name:       "PostgreSQL Tenant",
-			IsActive:   true,
-			DBType:     "postgres",
-			DBHost:     "localhost",
-			DBPort:     5432,
-			DBName:     "tenant_db",
-			DBUser:     "test_user",
-			DBPassword: "test_pass",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "postgres-tenant",
+			Name:      "PostgreSQL Tenant",
+			IsActive:  true,
+			DBType:    "postgres",
+			Cnn:       "host=localhost port=5432 user=test_user password=test_pass dbname=tenant_db sslmode=disable",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -230,17 +210,13 @@ func TestTenantConnectionManager_MySQL(t *testing.T) {
 
 		// Create MySQL tenant
 		tenant := &Tenant{
-			ID:         "mysql-tenant",
-			Name:       "MySQL Tenant",
-			IsActive:   true,
-			DBType:     "mysql",
-			DBHost:     "localhost",
-			DBPort:     3306,
-			DBName:     "tenant_db",
-			DBUser:     "test_user",
-			DBPassword: "test_pass",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "mysql-tenant",
+			Name:      "MySQL Tenant",
+			IsActive:  true,
+			DBType:    "mysql",
+			Cnn:       "test_user:test_pass@tcp(localhost:3306)/tenant_db?parseTime=true&loc=UTC&allowPublicKeyRetrieval=true",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -262,17 +238,13 @@ func TestTenantConnectionManager_ConnectionPooling(t *testing.T) {
 
 		// Create SQLite tenant
 		tenant := &Tenant{
-			ID:         "pool-tenant",
-			Name:       "Pool Tenant",
-			IsActive:   true,
-			DBType:     "sqlite",
-			DBHost:     "",
-			DBPort:     0,
-			DBName:     ":memory:",
-			DBUser:     "",
-			DBPassword: "",
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        "pool-tenant",
+			Name:      "Pool Tenant",
+			IsActive:  true,
+			DBType:    "sqlite",
+			Cnn:       ":memory:",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 		err := masterDB.Create(tenant).Error
 		require.NoError(t, err)
@@ -306,7 +278,7 @@ func TestTenantConnectionManager_MultipleTenants(t *testing.T) {
 				Name:      "Tenant 1",
 				IsActive:  true,
 				DBType:    "sqlite",
-				DBName:    ":memory:",
+				Cnn:       ":memory:",
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
@@ -315,7 +287,7 @@ func TestTenantConnectionManager_MultipleTenants(t *testing.T) {
 				Name:      "Tenant 2",
 				IsActive:  true,
 				DBType:    "sqlite",
-				DBName:    ":memory:",
+				Cnn:       ":memory:",
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
@@ -344,22 +316,18 @@ func TestTenantConnectionManager_MultipleTenants(t *testing.T) {
 func TestTenantModel(t *testing.T) {
 	t.Run("create tenant model", func(t *testing.T) {
 		tenant := &Tenant{
-			ID:         "test-tenant",
-			Name:       "Test Tenant",
-			IsActive:   true,
-			DBType:     "postgres",
-			DBHost:     "localhost",
-			DBPort:     5432,
-			DBName:     "test_db",
-			DBUser:     "user",
-			DBPassword: "pass",
+			ID:       "test-tenant",
+			Name:     "Test Tenant",
+			IsActive: true,
+			DBType:   "postgres",
+			Cnn:      "host=localhost port=5432 user=user password=pass dbname=test_db sslmode=disable",
 		}
 
 		assert.Equal(t, "test-tenant", tenant.ID)
 		assert.Equal(t, "Test Tenant", tenant.Name)
 		assert.True(t, tenant.IsActive)
 		assert.Equal(t, "postgres", tenant.DBType)
-		assert.Equal(t, "localhost", tenant.DBHost)
-		assert.Equal(t, 5432, tenant.DBPort)
+		assert.NotEmpty(t, tenant.Cnn)
+		assert.Contains(t, tenant.Cnn, "host=localhost")
 	})
 }

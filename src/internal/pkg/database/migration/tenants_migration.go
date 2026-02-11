@@ -26,20 +26,28 @@ func SeedSampleTenant(db *gorm.DB) error {
 		return nil // Tenant already exists
 	}
 	
-	// Create sample tenant
-	tenant := &database.Tenant{
-		ID:         "tenant-001",
-		Name:       "Sample Tenant",
-		DBHost:     "localhost",
-		DBPort:     5432,
-		DBName:     "tenant_001_db",
-		DBUser:     "postgres",
-		DBPassword: "password",
-		IsActive:   true,
+	// Create sample tenants with different database types
+	tenants := []*database.Tenant{
+		{
+			ID:       "tenant-001",
+			Name:     "PostgreSQL Tenant",
+			DBType:   "postgresql",
+			Cnn:      "host=localhost port=5432 user=postgres password=password dbname=tenant_001_db sslmode=disable",
+			IsActive: true,
+		},
+		{
+			ID:       "tenant-002",
+			Name:     "MySQL Tenant",
+			DBType:   "mysql",
+			Cnn:      "mysqluser:mysqlpass@tcp(localhost:3307)/tenant_db_1?parseTime=true&loc=UTC&allowPublicKeyRetrieval=true",
+			IsActive: true,
+		},
 	}
 	
-	if err := db.Create(tenant).Error; err != nil {
-		return fmt.Errorf("seed sample tenant: %w", err)
+	for _, tenant := range tenants {
+		if err := db.Create(tenant).Error; err != nil {
+			return fmt.Errorf("seed tenant %s: %w", tenant.ID, err)
+		}
 	}
 	
 	return nil
