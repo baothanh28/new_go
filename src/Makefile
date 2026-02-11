@@ -29,6 +29,7 @@ help: ## Display this help message
 	@echo "  dev             - Run the application in development mode with hot reload"
 	@echo "  product         - Run product service with hot reload"
 	@echo "  health          - Run health service with hot reload"
+	@echo "  master          - Run master service with hot reload (includes auth)"
 	@echo "  test            - Run tests"
 	@echo "  migrate         - Run database migrations"
 	@echo "  clean           - Clean build artifacts"
@@ -61,6 +62,10 @@ product: ## Run product service with hot reload (requires air)
 health: ## Run health service with hot reload (requires air)
 	@echo "Starting health service in development mode..."
 	@air -c .air.health.toml
+
+master: ## Run master service with hot reload (requires air, includes auth)
+	@echo "Starting master service in development mode..."
+	@air -c .air.master.toml
 
 test: ## Run tests
 	@echo "Running tests..."

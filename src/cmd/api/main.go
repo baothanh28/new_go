@@ -12,6 +12,7 @@ import (
 	"myapp/internal/module"
 	"myapp/internal/pkg/database"
 	authmigration "myapp/internal/service/auth"
+	mastermigration "myapp/internal/service/master/migration"
 	productmigration "myapp/internal/service/product/migration"
 )
 
@@ -105,6 +106,13 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("run auth migrations: %w", err)
 			}
 			logger.Info("Auth migrations completed")
+			
+			// Run master service migrations on master database
+			logger.Info("Running master service migrations...")
+			if err := mastermigration.RunMigrations(dbManager.MasterDB, logger); err != nil {
+				return fmt.Errorf("run master migrations: %w", err)
+			}
+			logger.Info("Master migrations completed")
 			
 			// Run product service migrations on tenant database
 			logger.Info("Running product service migrations...")

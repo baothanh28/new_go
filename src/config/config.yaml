@@ -29,8 +29,8 @@ jwt:
 auth:
   access_token_duration: "15m"
   refresh_token_duration: "168h"  # 7 days
-  rsa_private_key_path: "src/internal/pkg/auth/keys/private.pem"
-  rsa_public_key_path: "src/internal/pkg/auth/keys/public.pem"
+  rsa_private_key_path: "internal/pkg/auth/keys/private.pem"
+  rsa_public_key_path: "internal/pkg/auth/keys/public.pem"
   issuer: "myapp-auth-service"
   bcrypt_cost: 12
 

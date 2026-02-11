@@ -7,6 +7,7 @@ import (
 // Module exports config dependency
 var Module = fx.Options(
 	fx.Provide(NewConfig),
+	fx.Provide(NewAuthConfig), // Provide AuthConfig extracted from Config
 )
 
 // NewConfig creates a new Config instance
@@ -21,4 +22,9 @@ func NewConfig() (*Config, error) {
 		}
 	}
 	return cfg, nil
+}
+
+// NewAuthConfig extracts AuthConfig from Config for dependency injection
+func NewAuthConfig(cfg *Config) *AuthConfig {
+	return &cfg.Auth
 }
