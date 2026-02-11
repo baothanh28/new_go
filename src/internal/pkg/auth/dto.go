@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -41,16 +42,23 @@ type RefreshResponse struct {
 
 // UserResponse represents user data response (without sensitive info)
 type UserResponse struct {
-	ID        uint      `json:"id"`
+	ID        string    `json:"id"` // UUIDv7
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 // ToUserResponse converts a User model to UserResponse DTO
+// Note: User.ID should be updated to use UUIDv7 (string type) in the User model
 func (u *User) ToUserResponse() UserResponse {
+	// Convert ID to string - if User.ID is already UUID string, this will work
+	// If User.ID is uint, it will be converted to string (consider updating User model to use UUIDv7)
+	var idStr string
+	if u.ID != 0 {
+		idStr = fmt.Sprintf("%d", u.ID)
+	}
 	return UserResponse{
-		ID:        u.ID,
+		ID:        idStr,
 		Email:     u.Email,
 		Role:      u.Role,
 		CreatedAt: u.CreatedAt,
