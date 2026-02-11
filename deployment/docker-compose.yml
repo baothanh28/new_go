@@ -35,6 +35,24 @@ services:
       timeout: 5s
       retries: 5
 
+  tenant-db-1:
+    image: mysql:8.0
+    container_name: myapp-tenant-db-1
+    environment:
+      MYSQL_DATABASE: tenant_db_1
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: mysqlpass
+      MYSQL_ROOT_PASSWORD: rootmysqlpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - tenant-db-1-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-hmysql", "-uroot", "-prootmysqlpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   master-data:
   tenant-data:
