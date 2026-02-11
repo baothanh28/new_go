@@ -93,7 +93,7 @@ app := fx.New(
 
 #### Register
 ```http
-POST /auth/register
+POST /api/auth/register
 Content-Type: application/json
 
 {
@@ -105,7 +105,7 @@ Content-Type: application/json
 
 #### Login
 ```http
-POST /auth/login
+POST /api/auth/login
 Content-Type: application/json
 
 {
@@ -130,7 +130,7 @@ Response:
 
 #### Refresh Token
 ```http
-POST /auth/refresh
+POST /api/auth/refresh
 Content-Type: application/json
 
 {
@@ -148,7 +148,7 @@ Response:
 
 #### Logout
 ```http
-POST /auth/logout
+POST /api/auth/logout
 Authorization: Bearer eyJhbGc...
 
 Response:
@@ -159,7 +159,7 @@ Response:
 
 #### Get Current User
 ```http
-GET /auth/me
+GET /api/auth/me
 Authorization: Bearer eyJhbGc...
 
 Response:

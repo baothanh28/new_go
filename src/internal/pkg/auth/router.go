@@ -6,7 +6,8 @@ import (
 
 // RegisterRoutes registers authentication routes
 func RegisterRoutes(e *echo.Echo, handler *Handler, middleware echo.MiddlewareFunc) {
-	auth := e.Group("/auth")
+	api := e.Group("/api")
+	auth := api.Group("/auth")
 	
 	// Public routes (no authentication required)
 	auth.POST("/register", handler.Register)

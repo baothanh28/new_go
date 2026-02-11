@@ -90,7 +90,7 @@ func TestHandler_Register(t *testing.T) {
 			require.NoError(t, err)
 
 			e := echo.New()
-			req := httptest.NewRequest(http.MethodPost, "/auth/register", bytes.NewReader(body))
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewReader(body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
@@ -169,7 +169,7 @@ func TestHandler_Login(t *testing.T) {
 			require.NoError(t, err)
 
 			e := echo.New()
-			req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewReader(body))
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewReader(body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
@@ -222,7 +222,7 @@ func TestHandler_RefreshToken(t *testing.T) {
 		require.NoError(t, err)
 
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", bytes.NewReader(body))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -247,7 +247,7 @@ func TestHandler_RefreshToken(t *testing.T) {
 		require.NoError(t, err)
 
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", bytes.NewReader(body))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -281,7 +281,7 @@ func TestHandler_Logout(t *testing.T) {
 
 	t.Run("valid logout", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
 		req.Header.Set("Authorization", "Bearer "+loginResponse.AccessToken)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -293,7 +293,7 @@ func TestHandler_Logout(t *testing.T) {
 
 	t.Run("logout without token", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
@@ -326,7 +326,7 @@ func TestHandler_GetCurrentUser(t *testing.T) {
 
 	t.Run("get current user", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
 		req.Header.Set("Authorization", "Bearer "+loginResponse.AccessToken)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -350,7 +350,7 @@ func TestHandler_GetCurrentUser(t *testing.T) {
 
 	t.Run("get current user without auth", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 

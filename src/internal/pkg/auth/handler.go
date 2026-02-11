@@ -23,7 +23,7 @@ func NewHandler(service *Service, logger *zap.Logger) *Handler {
 }
 
 // Register handles user registration
-// POST /auth/register
+// POST /api/auth/register
 func (h *Handler) Register(c echo.Context) error {
 	var req RegisterRequest
 	if err := c.Bind(&req); err != nil {
@@ -56,7 +56,7 @@ func (h *Handler) Register(c echo.Context) error {
 }
 
 // Login handles user login
-// POST /auth/login
+// POST /api/auth/login
 func (h *Handler) Login(c echo.Context) error {
 	var req LoginRequest
 	if err := c.Bind(&req); err != nil {
@@ -89,7 +89,7 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 // RefreshToken handles token refresh
-// POST /auth/refresh
+// POST /api/auth/refresh
 func (h *Handler) RefreshToken(c echo.Context) error {
 	var req RefreshRequest
 	if err := c.Bind(&req); err != nil {
@@ -122,7 +122,7 @@ func (h *Handler) RefreshToken(c echo.Context) error {
 }
 
 // Logout handles user logout
-// POST /auth/logout
+// POST /api/auth/logout
 func (h *Handler) Logout(c echo.Context) error {
 	// Extract token from Authorization header
 	auth := c.Request().Header.Get("Authorization")
@@ -154,7 +154,7 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 // GetCurrentUser returns the current authenticated user
-// GET /auth/me
+// GET /api/auth/me
 func (h *Handler) GetCurrentUser(c echo.Context) error {
 	// Get user from context (set by middleware)
 	userCtx, err := GetUserFromContext(c)
