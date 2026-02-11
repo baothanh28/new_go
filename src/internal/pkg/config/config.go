@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -13,6 +14,7 @@ type Config struct {
 	MasterDatabase DatabaseConfig `mapstructure:"master_database"`
 	TenantDatabase DatabaseConfig `mapstructure:"tenant_database"`
 	JWT            JWTConfig      `mapstructure:"jwt"`
+	Auth           AuthConfig     `mapstructure:"auth"`
 	Logger         LoggerConfig   `mapstructure:"logger"`
 }
 
@@ -38,6 +40,16 @@ type DatabaseConfig struct {
 type JWTConfig struct {
 	Secret          string `mapstructure:"secret"`
 	ExpirationHours int    `mapstructure:"expiration_hours"`
+}
+
+// AuthConfig represents authentication configuration
+type AuthConfig struct {
+	AccessTokenDuration  time.Duration `mapstructure:"access_token_duration"`   // 15 minutes
+	RefreshTokenDuration time.Duration `mapstructure:"refresh_token_duration"` // 7 days
+	RSAPrivateKeyPath    string        `mapstructure:"rsa_private_key_path"`
+	RSAPublicKeyPath     string        `mapstructure:"rsa_public_key_path"`
+	Issuer               string        `mapstructure:"issuer"`
+	BCryptCost           int           `mapstructure:"bcrypt_cost"`
 }
 
 // LoggerConfig represents logger configuration
@@ -100,6 +112,32 @@ func (c *JWTConfig) Validate() error {
 	return nil
 }
 
+// Validate validates the auth configuration
+func (c *AuthConfig) Validate() error {
+	if c.AccessTokenDuration <= 0 {
+		c.AccessTokenDuration = 15 * time.Minute // default: 15 minutes
+	}
+	if c.RefreshTokenDuration <= 0 {
+		c.RefreshTokenDuration = 7 * 24 * time.Hour // default: 7 days
+	}
+	if c.RSAPrivateKeyPath == "" {
+		return fmt.Errorf("rsa_private_key_path is required")
+	}
+	if c.RSAPublicKeyPath == "" {
+		return fmt.Errorf("rsa_public_key_path is required")
+	}
+	if c.Issuer == "" {
+		c.Issuer = "myapp-auth-service" // default issuer
+	}
+	if c.BCryptCost <= 0 {
+		c.BCryptCost = 12 // default bcrypt cost
+	}
+	if c.BCryptCost < 4 || c.BCryptCost > 31 {
+		return fmt.Errorf("bcrypt_cost must be between 4 and 31")
+	}
+	return nil
+}
+
 // Validate validates the logger configuration
 func (c *LoggerConfig) Validate() error {
 	validLevels := []string{"debug", "info", "warn", "error"}
@@ -144,6 +182,9 @@ func (c *Config) Validate() error {
 	if err := c.JWT.Validate(); err != nil {
 		return fmt.Errorf("validate jwt config: %w", err)
 	}
+	if err := c.Auth.Validate(); err != nil {
+		return fmt.Errorf("validate auth config: %w", err)
+	}
 	if err := c.Logger.Validate(); err != nil {
 		return fmt.Errorf("validate logger config: %w", err)
 	}
@@ -160,6 +201,10 @@ func LoadConfig(configPath string) (*Config, error) {
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("logger.format", "json")
 	v.SetDefault("jwt.expiration_hours", 24)
+	v.SetDefault("auth.access_token_duration", "15m")
+	v.SetDefault("auth.refresh_token_duration", "168h") // 7 days
+	v.SetDefault("auth.issuer", "myapp-auth-service")
+	v.SetDefault("auth.bcrypt_cost", 12)
 	
 	// Read config file if provided
 	if configPath != "" {

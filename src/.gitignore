@@ -58,3 +58,6 @@ config/config.local.yaml
 
 # Deployment data (Docker volumes and local data)
 ../deployment/data/
+
+# Auth module - RSA private key (keep public key)
+src/internal/pkg/auth/keys/private.pem

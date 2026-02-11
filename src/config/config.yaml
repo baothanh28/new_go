@@ -26,6 +26,14 @@ jwt:
   secret: "your-secret-key-change-in-production-must-be-at-least-32-characters"
   expiration_hours: 24
 
+auth:
+  access_token_duration: "15m"
+  refresh_token_duration: "168h"  # 7 days
+  rsa_private_key_path: "src/internal/pkg/auth/keys/private.pem"
+  rsa_public_key_path: "src/internal/pkg/auth/keys/public.pem"
+  issuer: "myapp-auth-service"
+  bcrypt_cost: 12
+
 logger:
   level: "info"
   format: "json"
