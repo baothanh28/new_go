@@ -19,6 +19,9 @@ func RegisterMasterRoutes(
 	// API routes
 	api := e.Group("/api")
 
+	// Health check route
+	api.GET("/health", masterHandler.Health)
+
 	// Public group - Rate limited but no authentication
 	publicMasters := api.Group("/masters", rateLimitMiddleware())
 	publicMasters.GET("", masterHandler.GetMasters)

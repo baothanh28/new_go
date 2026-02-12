@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"myapp/internal/service/master/model"
@@ -188,5 +189,15 @@ func (h *Handler) DeleteMaster(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "Master record deleted successfully",
+	})
+}
+
+// Health returns the basic health status of the service
+// GET /health
+func (h *Handler) Health(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status":  "healthy",
+		"service": "master-service",
+		"time":    time.Now().UTC(),
 	})
 }
