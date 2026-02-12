@@ -53,19 +53,19 @@ run: ## Run the application (serve command)
 
 dev: ## Run the application in development mode with hot reload (requires air)
 	@echo "Starting $(APP_NAME) in development mode..."
-	@air
+	@air -c air/main.toml
 
 product: ## Run product service with hot reload (requires air)
 	@echo "Starting product service in development mode..."
-	@air -c .air.product.toml
+	@air -c air/product.toml
 
 health: ## Run health service with hot reload (requires air)
 	@echo "Starting health service in development mode..."
-	@air -c .air.health.toml
+	@air -c air/health.toml
 
 master: ## Run master service with hot reload (requires air, includes auth)
 	@echo "Starting master service in development mode..."
-	@air -c .air.master.toml
+	@air -c air/master.toml
 
 test: ## Run tests
 	@echo "Running tests..."
