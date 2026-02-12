@@ -59,14 +59,13 @@ func StartCleanupWorker(
 	tokenRepo *TokenRepository,
 	logger *zap.Logger,
 ) {
+	// Create a context that will be cancelled when the app stops
+	workerCtx, cancel := context.WithCancel(context.Background())
+
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			// Create a cancellable context for the cleanup worker
-			workerCtx, cancel := context.WithCancel(context.Background())
-			
 			// Start cleanup worker in background
 			go func() {
-				defer cancel()
 				ticker := time.NewTicker(1 * time.Hour) // Run cleanup every hour
 				defer ticker.Stop()
 				
@@ -87,17 +86,12 @@ func StartCleanupWorker(
 				}
 			}()
 			
-			// Store cancel function for OnStop
-			go func() {
-				<-ctx.Done()
-				cancel()
-			}()
-			
 			logger.Info("Token cleanup worker started")
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
 			logger.Info("Stopping token cleanup worker")
+			cancel()
 			return nil
 		},
 	})
