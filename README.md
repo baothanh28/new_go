@@ -46,7 +46,7 @@ make dev
 
 **Without hot reload:**
 ```bash
-make run
+  make run
 ```
 
 The API server will start at `http://localhost:8080`
